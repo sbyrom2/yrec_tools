@@ -1,11 +1,18 @@
 '''
 Intended use:
-- Read a master set of YREC namelist files, where both .nml1 and .nml2 are required. 
-- Replace parameter assignments given in command-line interface (CLI).
-- Write out a new set of YREC namelist files with user-specified naming convention. 
-How to use: 
-python update_nml.py [filename].nml1 [filename].nml2 [output_prefix] "[PARAM]=[newvalue]"
-- Multiple parameters can be listed after the output prefix. 
+    - Read a master set of YREC namelist files, where both .nml1 and .nml2 are required. 
+    - Replace parameter assignments given in command-line interface (CLI) or via function call. 
+    - Write out a new set of YREC namelist files with user-specified naming convention. 
+How to use CLI: 
+    - python update_nml.py [filename].nml1 [filename].nml2 [output_prefix] "[PARAM]=[newvalue]"
+How to use function call: 
+    from update_nml_utils.py import update_namelists
+    params = {"[PARAM1]":"[VALUE]", "[PARAM2]":"[VALUE]", [...]} 
+    result = update_namelists("file.nml1", "file.nml2", "updated_file", params, verbose=True) 
+    
+    Note:
+    - Multiple parameters can be passed. 
+    - if verbose = False, no warnings or print statements will be displayed. 
 '''
 import sys
 import re
@@ -18,12 +25,13 @@ def write_nml(filename, lines):
     with open(filename, "w") as f:
         f.writelines(lines)
 
-def parse_updates(args):
-    ''' Reads only valid arguments in CLI, with warning when missing "=" '''
+def parse_updates(args, verbose=True):
+    ''' Parses CLI args or list of "PARAM=VALUE" strings into a dict.'''
     updates = {}
     for arg in args:
         if "=" not in arg:
-            print(f"Skipping invalid update argument: {arg}")
+            if verbose: 
+                print(f"Skipping invalid update argument: {arg}")
             continue
         param, val = arg.split("=", 1)
         updates[param.strip().upper()] = val.strip()
@@ -58,6 +66,51 @@ def update_lines(lines, updates):
 
     return new_lines, found_params
 
+def update_namelists(nml1_file, nml2_file, output_prefix, updates_dict, verbose=True):
+    '''
+    Update YREC nml1 and nml2 files with given parameter updates.
+    
+    Args: 
+        nml1_file (str) : Path to nml1 file.
+        nml2_file (str) : Path to nml2 file. 
+        output_prefix (str) : Prefix for updated .nml files.
+        updates_dict (dict) : Dictionary of parameters to be changed and the values specfied.
+        verbose (bool) : Print status messages if True. 
+    Returns: 
+        dict: { 
+            "output_files": (updated_file.nml1, updated_file.nml2), 
+            "missing_params": [list of parameters not found] 
+        }
+    '''
+    nml1_lines = read_nml(nml1_file)
+    nml2_lines = read_nml(nml2_file)
+    
+    # Update parameters 
+    nml1_updated, nml1_found = update_lines(nml1_lines, updates_dict)
+    nml2_updated, nml2_found = update_lines(nml2_lines, updates_dict)
+
+    # Check for missing params
+    all_found = nml1_found.union(nml2_found)
+    missing = [param for param in updates_dict if param not in all_found]
+
+    # Create file name using output_prefix
+    new_nml1_file = f"{output_prefix}.nml1"
+    new_nml2_file = f"{output_prefix}.nml2"
+    write_nml(new_nml1_file, nml1_updated)
+    write_nml(new_nml2_file, nml2_updated)
+    
+    if verbose:
+        print(f"Output files:\n  {new_nml1_file}\n  {new_nml2_file}")
+        if missing:
+            print("Warning: parameters not found:", ", ".join(missing))
+        else:
+            print("All parameters updated successfully.")
+
+    return {
+        "output_files": (new_nml1_file, new_nml2_file),
+        "missing_params": missing 
+        }
+
 def main():
     if len(sys.argv) < 5:
         print("Usage: python update_nml.py nml1_file nml2_file output_prefix 'PARAM=VALUE [...]'")
@@ -68,29 +121,7 @@ def main():
     output_prefix = sys.argv[3]
     updates = parse_updates(sys.argv[4:])
     
-    # Read nml files
-    nml1_lines = read_nml(nml1_file)
-    nml2_lines = read_nml(nml2_file)
-
-    # Update all parameters in both namelists
-    nml1_updated_lines, nml1_found = update_lines(nml1_lines, updates)
-    nml2_updated_lines, nml2_found = update_lines(nml2_lines, updates)
-
-    # Warn about missing parameters
-    all_found = nml1_found.union(nml2_found)
-    missing_params = [param for param in updates if param not in all_found]
-    if missing_params:
-        print(f"Warning: the following parameters were not found in either .nml1 or .nml2:\n{', '.join(missing_params)}")
-
-    # Rename files using output prefix from CLI
-    new_nml1_file = f"{output_prefix}.nml1"
-    new_nml2_file = f"{output_prefix}.nml2"
-    print(f"Output files:\nnml1: {new_nml1_file}\nnml2: {new_nml2_file}")
-
-    # Save files
-    write_nml(new_nml1_file, nml1_updated_lines)
-    write_nml(new_nml2_file, nml2_updated_lines)
-    print("Files saved successfully.")
+    update_namelists(nml1_file, nml2_file, output_prefix, updates, verbose=True)
 
 if __name__ == "__main__":
     main()
