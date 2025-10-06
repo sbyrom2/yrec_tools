@@ -6,7 +6,7 @@ Intended use:
 How to use CLI: 
     - python update_nml.py [filename].nml1 [filename].nml2 [output_prefix] "[PARAM]=[newvalue]"
 How to use function call: 
-    from update_nml.py import update_namelists
+    from update_nml import update_namelists
     params = {"[PARAM1]":"[VALUE]", "[PARAM2]":"[VALUE]", [...]} 
     result = update_namelists("file.nml1", "file.nml2", "updated_file", params, verbose=True) 
     
