@@ -173,9 +173,6 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 		 	2d array with shape (len(masses),len(FeHs)) that contains the nml filenames
 			E.g. if masses[0] = 1 and FeHs[0] = -.25
 				nmls_list[0][0] = base_fpath + 'm0100fehm025' + base_fname
-		problems : set
-			Set of params passed to update_namelists (at the end of the nested for loop)
-			that did not exist in the initial nml1 and nml2 files. Ideally this is empty.
 		 """
 
 	# numbers needed to convert [Fe/H] to Z, X. These can be changed to match your preferred sources
@@ -252,7 +249,7 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			if problems != set():
 				raise Exception(f'Not all parameters were able to be changed')
 
-	return nmls_list, problems
+	return nmls_list
 
 opalstr = ['.002632875','.021444000','.020000000','.029000000','.002674883','.018664570',
 			'.007734637','.003444000','.001714251','.031490336','.046300423','.010369920',
