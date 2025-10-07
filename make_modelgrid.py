@@ -210,7 +210,7 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 
 			# pick the nearest atmosphere table to match FeHs[j]
 			atmbase = yrec_inputpath +'/atmos/kurucz/atmk1990'
-			# if you change to using Allarad atmosphere tables, you'll need to change atmoptions and atmbase
+			# if you change to using Allard atmosphere tables, you'll need to change atmoptions and atmbase
 			atmnum = find_nearest(atmoptions,FeHs[j])
 			atmname = f'"{atmbase}{atmstr[atmnum]}.tab"'
 
@@ -343,7 +343,7 @@ atmstr = [ 'm50', 'm45','m40', 'm35','m33','m30','m25','m23','m20','m175','m17',
 		'm13','m125','m10','m075','m05','m04','m03','m02','m01','m005','p00','p005',
 		'p01','p012','p013', 'p014','p015','p02','p03','p04','p05','p075','p10' ]
 
-# atmosphere FeH values from Allarad
+# atmosphere FeH values from Allard
 # atmoptions = [-4,-3.5,-3,-2,-1.5,-1.3,-1,-0.5,0]
 
 # parameters that need to have the correct inputpath
