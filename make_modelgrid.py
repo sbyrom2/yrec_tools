@@ -11,13 +11,34 @@ are hard-coded at the end of the file. Feel free to take a look
 and switch them if you're using different input tables or models
 
 
+Example: Make a grid of masses from 0.5-1 Msun and [Fe/H] from -0.5 to 0 
+
+# only 2 decimal places of precision
+# unless you modify make_MZgrid itself
+masses = np.round(np.linspace(0.5,1,11),3) 
+FeHs = np.linspace(-.5,0,3)
+
+
+base_fname 'GSnorot' # the name of the starting nml files
+base_fpath = 'norotation_grid' # the path to the starting nml files
+yrec_writepath = 'output' # where yrec will write the models to 
+yrec_inputpath = '../../yrec/input" # the path to the yrec input files
+
+nml_grid_filenames = make_MZgrid(masses,FeHs,base_fname=base_fname,base_fpath=base_fpath,
+            yrec_writepath='output',yrec_inputpath='../../yrec/input')
+
+
+print(nml_grid_filenames[1][1])
+output: 'norotation_grid/m055fehm025_GSnorots'
+
+# now you have all the file names for your grid in one place
+
+
 '''
 import numpy as np
 from update_nml import update_namelists
 
-# TODO - actually check that this works with update_namelists
-# TODO make mstrings have an underscore instead of a decimal OR fix docstring in makeMZgrid
-
+# helper function
 def FeH_to_XYZ(FeH,Z_solar,X_solar,Yp=0.2482):
 	""" Returns the H, He, and metal mass fraction. Assumes solar alpha enhancement.
 
@@ -55,6 +76,7 @@ def FeH_to_XYZ(FeH,Z_solar,X_solar,Yp=0.2482):
 	X = 1 - Y - Z
 	return X,Y,Z
 
+# helper function
 def filestr_to_num(s:str,sig_figs=3,ignore_sign=False):
 	''' Converts a string to a floating point
 
@@ -90,6 +112,7 @@ def filestr_to_num(s:str,sig_figs=3,ignore_sign=False):
 	print(float(s[1:]),tol)
 	return coef * num
 
+# helper function
 def num_to_filestr(z:float,sig_figs=3,ignore_sign=False):
 	""" Convert a number to a string that can be used in the filename
 		Parameters
@@ -131,6 +154,7 @@ def num_to_filestr(z:float,sig_figs=3,ignore_sign=False):
 		return tmp
 	return zname + tmp
 
+# helper function
 def find_nearest(a:np.ndarray, value:float):
 	''' Find the index of the element of a closest to value.
 	If there are two equidistant elements of a, use the one with a lower index.
@@ -138,16 +162,18 @@ def find_nearest(a:np.ndarray, value:float):
 	idx = np.argmin(abs(a-value))
 	return idx
 
+# the actual function!
 def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:str,
 				yrec_writepath:str, yrec_inputpath:str):
 	""" Creates a grid of YREC input files with the same base physical assumptions,
 		but run at a range of masses and compositions
-		Note: masses and FeHs do not have to be the same length
 
 		Parameters
 		----------
 		masses : np.ndarray(float)
-			List of masses you wish to make the grid for (units: Msolar)
+			List of masses (2 decimal places of precision) to make the grid for (units: Msolar)
+			If you want to add more decimal places of precision, modify the sig_figs parameter
+			of num_to_filestring
 		FeHs : np.ndarray(float)
 			List of [Fe/H] values you wish to make the grid for
 		base_fname : string
@@ -169,10 +195,12 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 
 		Return
 		------
-		nmls_list : np.ndarray(dtype=StringDType())
-		 	2d array with shape (len(masses),len(FeHs)) that contains the nml filenames
+		nmls_list : list(list(string))
+		 	2d list with shape (len(masses),len(FeHs)) that contains the nml filenames
 			E.g. if masses[0] = 1 and FeHs[0] = -.25
 				nmls_list[0][0] = base_fpath + 'm0100fehm025' + base_fname
+			If you have a version of numpy that supports variable-length strings, 
+			you can convert this output to an array to make indexing easier
 		 """
 
 	# numbers needed to convert [Fe/H] to Z, X. These can be changed to match your preferred sources
@@ -181,7 +209,7 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 	Yp = 0.2454 # Planck 2018 results
 
 	# output an array of the resulting base nml names (index by mass and FeH)
-	nmls_list = np.ones((len(masses),len(FeHs)),dtype=np.dtypes.StringDType())
+	nmls_list = []
 	for i in range(len(masses)):
 		# find the nearest mass_options value to masses[i] (used for determining the input file)
 		mnum = find_nearest(mass_options, masses[i])
@@ -193,6 +221,9 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 		mass_str = num_to_filestr(masses[i],sig_figs=3,ignore_sign=True) # string version of mass, used for naming files
 		if masses[i] > 10: # num to filestr only works for inputs less than 10
 			mass_str = num_to_filestr(masses[i]/10,sig_figs=4,ignore_sign=True)
+        
+        # set up the element of nmls that will be populated by file names
+		nmls_list.append([])
 
 		for j in range(len(FeHs)):
 			FeH_str = num_to_filestr(FeHs[j])
@@ -239,11 +270,11 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 
 			changes_dict = dict(zip(params, values))
 
-			nml_base = base_fpath + base_fname
-			new_nml_name = base_fpath + 'm' + mass_str + 'feh' + FeH_str +"_" + base_fname
+			nml_base = base_fpath + "/" + base_fname
+			new_nml_name = base_fpath + '/m' + mass_str + 'feh' + FeH_str +"_" + base_fname
 
 			info = update_namelists(f'{nml_base}.nml1',f'{nml_base}.nml2', new_nml_name, changes_dict, verbose=False)
-			nmls_list[i][j] = info['output_files'][0][:-5]
+			nmls_list[i].append(info['output_files'][0][:-5])
 			# we'll want to track if there are problems with assigning variable names 
 			problems = set(info['missing_params'])
 			if problems != set():
