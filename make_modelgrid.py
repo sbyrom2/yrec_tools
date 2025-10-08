@@ -40,12 +40,12 @@ out: 'norotation_grid/m055fehm025_GSnorot'
 # or absolute path '/home/sus/Masters/yrec_tools/norotation_grid/m055fehm025_GSnorot'
 
 Now you have all the file names for your grid in object
-
-
 '''
+
 import numpy as np
 import update_nml
 from update_nml import update_namelists
+from glob import glob
 
 
 # helper function
@@ -94,6 +94,20 @@ def ENV0A_params(numrun:int,Xstr:str,Zstr:str):
 		params.append(f'ZENV0A({i+1})')
 	return params, values
 
+def get_initialmodel_Zs(mass:float,yrec_inputpath:str):
+	''' For a starting mass, get the accepted z values
+	'''
+	mass_idx = np.where(mass_options == mass)[0][0]
+	mass = mass_stringoptions[mass_idx]
+	lines = glob(f'{yrec_inputpath}/models/dbl/m{mass}*')
+	zstrs = []
+	zs = []
+	for line in lines:
+		zstr = line.split('z')[1].split('_')[0]
+		zstrs.append(zstr)
+		z_idx = np.where(Z_stringoptions == zstr)[0][0]
+		zs.append(float(Z_options[z_idx]))
+	return zs, zstrs
 
 # helper function
 def FeH_to_XYZ(FeH,Z_solar,X_solar,Yp=0.2482):
@@ -274,6 +288,7 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			# as of 2013, it is easier/more reliable to rescale up than down
 			mnum = mnum - 1 if mnum != 0 else mnum
 		m_Ffirst = mass_stringoptions[mnum]
+		Zoptions, Zstr_options = get_initialmodel_Zs(mass_options[mnum],yrec_inputpath)
 
 		mass_str = num_to_filestr(masses[i],sig_figs=3,ignore_sign=True) # string version of mass, used for naming files
 		if masses[i] > 10: # num to filestr only works for inputs less than 10
@@ -281,6 +296,7 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 		
 		# set up the element of nmls that will be populated by file names
 		nmls_list.append([])
+
 
 		for j in range(len(FeHs)):
 			FeH_str = num_to_filestr(FeHs[j])
@@ -313,8 +329,8 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			input_filenames = [f'"{yrec_inputpath}{i}"' for i in yrec_inputpath_vals]
 
 			# find the nearest zoptions value to Z
-			Z_idx = find_nearest(Z_options, Z)
-			Z_Ffirst = Z_stringoptions[Z_idx]
+			Z_idx = find_nearest(Zoptions, Z)
+			Z_Ffirst = Zstr_options[Z_idx]
 
 			# Ffirst is the starting model. I recommend starting with the dbl (deuterium birthline) models
 			Ffirst = f'"{yrec_inputpath}/models/dbl/m{m_Ffirst}gs98z{Z_Ffirst}_Dbl.first"'
@@ -414,13 +430,14 @@ opaloptions = [0.002632875, 0.021444, 0.02, 0.029, 0.002674883, 0.01866457, 0.00
 			 0.028312537, 0.000172129, 0.027444, 0.031444, 0.006, 0.024, 0.008437702, 0.067908189,
 			 0.019134119, 0.010561242, 0.001967802, 0.007444, 0.02660621, 0.043558181, 0.001937326,
 			 0.010820115, 0.040234474, 0.016465295, 0.021880056, 0.001067212, 0.063472292, 0.018596758]
+
 # starting mass options in yrec/input/model/dbl
-mass_options = [0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
+mass_options = np.array([0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
 				0.15, 0.2, 0.3, 0.4,0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
 				1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8,1.9, 2.0,
 				2.2, 2.4, 2.6, 2.8, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5,
 				6.0, 6.5,7.0, 7.5, 8.0, 8.5, 9.0, 10.0, 12.0, 14.0,
-				16.0, 18.0, 20.0, 22.5, 25.0]
+				16.0, 18.0, 20.0, 22.5, 25.0])
 mass_stringoptions = ['0030', '0040', '0050', '0060', '0070', '0080', '0090', '0100',
 		'0150', '0200', '0300', '0400','0500', '0600', '0700', '0800', '0900', '1000',
 		'1100', '1200', '1300', '1400', '1500', '1600', '1700', '1800','1900', '2000',
@@ -429,8 +446,9 @@ mass_stringoptions = ['0030', '0040', '0050', '0060', '0070', '0080', '0090', '0
 		'16000', '18000', '20000', '22500', '25000']
 
 # starting Z options in yrec/input/model/dbl
-Z_options = [0.001, 0.003, 0.01, 0.018804, 0.04, 0.06]
-Z_stringoptions = ['001000', '003000', '010000', '018804', '040000', '060000']
+Z_options = np.array([0.001, 0.003, 0.01, 0.018804, 0.04, 0.06])
+Z_stringoptions = np.array(['001000', '003000', '010000', '018804', '040000', '060000'])
+
 
 # atmosphere FeH values from Kurucz
 atmoptions = [-5.0,-4.5,-4.0,-3.5,-3.3,-3.0,-2.5,-2.3,-2.0,-1.75,-1.7,-1.5,-1.3,
