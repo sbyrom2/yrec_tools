@@ -272,9 +272,9 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 
 			# Note: if NUMRUN != 3 (in .nml1), you'll need to change the number of '(X/Z)ENV0A(n)' params and values
 			params = ['RSCLM(1)','RSCLX(1)','RSCLZ(1)','XENV0A(1)','ZENV0A(1)','XENV0A(2)','ZENV0A(2)','XENV0A(3)',
-				'ZENV0A(3)','ZOPAL951','FFIRST','FOPALE06','FATM'] + output_file_params + yrec_inputpath_params
+				'ZENV0A(3)','ZOPAL951','FFIRST','FOPALE06','FATM','A'] + output_file_params + yrec_inputpath_params
 			values = [masses[i], Xstr, Zstr, Xstr, Zstr, Xstr, Zstr, Xstr,
-				Zstr, Zstr, Ffirst, opname, atmname] + output_filenames + input_filenames
+				Zstr, Zstr, Ffirst, opname, atmname, 'A'] + output_filenames + input_filenames
 
 			changes_dict = dict(zip(params, values))
 
@@ -286,7 +286,7 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			# we'll want to track if there are problems with assigning variable names 
 			problems = set(info['missing_params'])
 			if problems != set():
-				raise Exception(f'Not all parameters were able to be changed')
+				raise Exception(f'Problem with parameters: \n{problems} \ncould not be changed')
 
 	return nmls_list
 
