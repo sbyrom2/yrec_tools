@@ -13,29 +13,37 @@ and switch them if you're using different input tables or models
 
 Example: Make a grid of masses from 0.5-1 Msun and [Fe/H] from -0.5 to 0 
 
-# only 2 decimal places of precision
-# unless you modify make_MZgrid itself
+# masses should only have 2 decimal places of precision 
+# unless you modify make_MZgrid
 masses = np.round(np.linspace(0.5,1,11),3) 
 FeHs = np.linspace(-.5,0,3)
 
+# relative or absolute path to the starting nml files 
+base_fpath = 'norotation_grid' # or '/home/sus/yrec_tools/norotation_grid/' 
 
-base_fname 'GSnorot' # the name of the starting nml files
-base_fpath = 'norotation_grid' # the path to the starting nml files
-yrec_writepath = 'output' # where yrec will write the models to 
-yrec_inputpath = '../../yrec/input" # the path to the yrec input files
+# relative or absolute to which yrec will write the models
+yrec_writepath = 'output' # or '/home/sus/yrec_tools/norotation_grid/output'
+
+# relative or absolute path to yrec input files
+yrec_inputpath = '../../yrec/input" # or '/home/sus/yrec/input'
+
+# the name of the starting nml files
+# found in the base_fpath directory
+base_fname 'GSnorot' 
 
 nml_grid_filenames = make_MZgrid(masses,FeHs,base_fname=base_fname,base_fpath=base_fpath,
             yrec_writepath='output',yrec_inputpath='../../yrec/input')
 
 
 print(nml_grid_filenames[1][1])
-output: 'norotation_grid/m055fehm025_GSnorots'
+out: 'norotation_grid/m055fehm025_GSnorot' 
+# or absolute path '/home/sus/Masters/yrec_tools/norotation_grid/m055fehm025_GSnorot'
 
-# now you have all the file names for your grid in one place
+Now you have all the file names for your grid in object
 
 
 '''
-import numpy as np
+import numpy as np#
 from update_nml import update_namelists
 
 # helper function
