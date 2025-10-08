@@ -32,7 +32,7 @@ yrec_inputpath = '../../yrec/input" # or '/home/sus/yrec/input'
 base_fname 'GSnorot' 
 
 nml_grid_filenames = make_MZgrid(masses,FeHs,base_fname=base_fname,base_fpath=base_fpath,
-            yrec_writepath='output',yrec_inputpath='../../yrec/input')
+			yrec_writepath='output',yrec_inputpath='../../yrec/input')
 
 
 print(nml_grid_filenames[1][1])
@@ -43,8 +43,57 @@ Now you have all the file names for your grid in object
 
 
 '''
-import numpy as np#
+import numpy as np
+import update_nml
 from update_nml import update_namelists
+
+
+# helper function
+def find_numrun(nml1_filename:str):
+	''' Reads .nml1 file and returns the value of the NUMRUNS variable
+		Parameter
+		--------
+		path : str
+			absolute or relative path to the .nml1 file you're checking
+
+	'''
+	nml1_lines = update_nml.read_nml(nml1_filename)
+	for line in nml1_lines:
+		stripped = line.strip()
+		if stripped[:6] == 'NUMRUN':
+			n = stripped.split('=')[1]
+			return int(n.split()[0])
+	raise Exception(f'NUMRUN not declared in {nml1_filename}')
+
+# helper function
+def ENV0A_params(numrun:int,Xstr:str,Zstr:str):
+	''' The changes to nml1 depend on the NUMRUN variable
+
+		Parameters
+		----------
+		numrun : int
+			The value of NUMRUN in the nml1 file you're modifying
+		Xstr : string
+			The value of X for your model
+		Zstr : string
+			The value of Z for your model
+		
+		Return
+		------
+			params : list(str)
+				The parameters of nml1 that will set the envelope abundances
+				(will take the form ['XENV0A(1)', 'ZENV0A(1)', etc])
+			values : list(str)
+				The values for the envelope abundances
+
+	'''
+	params = []
+	values = [Xstr,Zstr] * numrun
+	for i in range(numrun):
+		params.append(f'XENV0A({i+1})')
+		params.append(f'ZENV0A({i+1})')
+	return params, values
+
 
 # helper function
 def FeH_to_XYZ(FeH,Z_solar,X_solar,Yp=0.2482):
@@ -229,8 +278,8 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 		mass_str = num_to_filestr(masses[i],sig_figs=3,ignore_sign=True) # string version of mass, used for naming files
 		if masses[i] > 10: # num to filestr only works for inputs less than 10
 			mass_str = num_to_filestr(masses[i]/10,sig_figs=4,ignore_sign=True)
-        
-        # set up the element of nmls that will be populated by file names
+		
+		# set up the element of nmls that will be populated by file names
 		nmls_list.append([])
 
 		for j in range(len(FeHs)):
@@ -270,23 +319,32 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			# Ffirst is the starting model. I recommend starting with the dbl (deuterium birthline) models
 			Ffirst = f'"{yrec_inputpath}/models/dbl/m{m_Ffirst}gs98z{Z_Ffirst}_Dbl.first"'
 
-			# Note: if NUMRUN != 3 (in .nml1), you'll need to change the number of '(X/Z)ENV0A(n)' params and values
-			params = ['RSCLM(1)','RSCLX(1)','RSCLZ(1)','XENV0A(1)','ZENV0A(1)','XENV0A(2)','ZENV0A(2)','XENV0A(3)',
-				'ZENV0A(3)','ZOPAL951','FFIRST','FOPALE06','FATM'] + output_file_params + yrec_inputpath_params
-			values = [masses[i], Xstr, Zstr, Xstr, Zstr, Xstr, Zstr, Xstr,
-				Zstr, Zstr, Ffirst, opname, atmname] + output_filenames + input_filenames
+			
+			nml_base = base_fpath + "/" + base_fname
+			new_nml_name = base_fpath + '/m' + mass_str + 'feh' + FeH_str +"_" + base_fname
+			
+			# set envelope abundance labels - the number of parameters that need to be changed 
+			# depends on the value of NUMRUN
+			numrun = find_numrun(nml_base+'.nml1') 
+			ENV0A = ENV0A_params(numrun,Xstr,Zstr) 
+
+			params = ['RSCLM(1)','RSCLX(1)','RSCLZ(1)','ZOPAL951','FFIRST','FOPALE06','FATM'] \
+				+ output_file_params + yrec_inputpath_params + ENV0A[0]
+			values = [masses[i], Xstr, Zstr, Zstr, Ffirst, opname, atmname] \
+				+ output_filenames + input_filenames + ENV0A[1]
 
 			changes_dict = dict(zip(params, values))
 
-			nml_base = base_fpath + "/" + base_fname
-			new_nml_name = base_fpath + '/m' + mass_str + 'feh' + FeH_str +"_" + base_fname
+			
 
 			info = update_namelists(f'{nml_base}.nml1',f'{nml_base}.nml2', new_nml_name, changes_dict, verbose=False)
 			nmls_list[i].append(info['output_files'][0][:-5]) # don't keep .nml1 suffix
 			
 			# we'll want to track if there are problems with assigning variable names 
 			problems = set(info['missing_params'])
-			if problems != set():
+			if problems == set(['ZENV0A(3)','XENV0A(3)']):
+				continue
+			elif problems != set():
 				raise Exception(f'Problem with parameters: \n{problems} \ncould not be changed')
 
 	return nmls_list
