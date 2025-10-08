@@ -196,11 +196,11 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			to the same location.  
 		yrec_writepath : string
 			Path to where YREC outputs will be stored (e.g. /home/myname/EVOLUTION/output/YRECgrid/nodiff )
-			If using a relative path, make sure it starts at your base_fpath
+			If using a relative path, make sure it starts from where you'll run the nml files
 		yrec_inputpath : string
-			Path to where the input files for YREC are located (e.g. /home/myname/EVOLUTION/input)
-			If using a relative path, make sure it starts at your base_fpath
-
+			Path to where the input files for YREC are located (e.g. /home/myname/yrec/input)
+			If using a relative path, make sure it starts from where you'll run the nml files
+			
 		Return
 		------
 		nmls_list : list(list(string))
@@ -282,7 +282,8 @@ def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:s
 			new_nml_name = base_fpath + '/m' + mass_str + 'feh' + FeH_str +"_" + base_fname
 
 			info = update_namelists(f'{nml_base}.nml1',f'{nml_base}.nml2', new_nml_name, changes_dict, verbose=False)
-			nmls_list[i].append(info['output_files'][0][:-5])
+			nmls_list[i].append(info['output_files'][0][:-5]) # don't keep .nml1 suffix
+			
 			# we'll want to track if there are problems with assigning variable names 
 			problems = set(info['missing_params'])
 			if problems != set():
