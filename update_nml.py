@@ -37,11 +37,13 @@ def parse_updates(args, verbose=True):
         updates[param.strip().upper()] = val.strip()
     return updates
 
-def update_lines(lines, updates):
-    """Update lines with new parameter values while keeping indentation and comments."""
+def update_lines(lines, updates, output_prefix):
+    """Update lines with new parameter values and replace outfile names with user specified output_prefix."""
     found_params = set()
     new_lines = []
-
+    
+    output_file_names = ['FLAST','FSTOR','FTRACK','FSHORT','FPMOD','FPENV','FPATM','FMODPT','FSNU','FSCOMP']
+    
     for line in lines:
         stripped = line.lstrip()
         if not stripped or stripped.startswith("!"):
@@ -61,6 +63,19 @@ def update_lines(lines, updates):
                 found_params.add(param)
                 updated = True
                 break
+        
+        # Replaces output file names 
+        if not updated: 
+            for fname in output_file_names: 
+                match = re.match(rf"^\s*{fname}\s*=\s*['\"]?.*?\.([a-zA-Z0-9_]+)['\"]?(.*)$", line, re.IGNORECASE)
+                if match:
+                    ext = match.group(1)
+                    new_file_name = f'"{output_prefix}.{ext}"'
+                    new_lines.append(f" {fname} = {new_file_name}\n")
+                    updated = True
+                    break
+        
+        # Keeps remaining parameters as is
         if not updated:
             new_lines.append(line)
 
@@ -86,8 +101,8 @@ def update_namelists(nml1_file, nml2_file, output_prefix, updates_dict, verbose=
     nml2_lines = read_nml(nml2_file)
     
     # Update parameters 
-    nml1_updated, nml1_found = update_lines(nml1_lines, updates_dict)
-    nml2_updated, nml2_found = update_lines(nml2_lines, updates_dict)
+    nml1_updated, nml1_found = update_lines(nml1_lines, updates_dict, output_prefix)
+    nml2_updated, nml2_found = update_lines(nml2_lines, updates_dict, output_prefix)
 
     # Check for missing params
     all_found = nml1_found.union(nml2_found)
