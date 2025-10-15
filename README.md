@@ -16,12 +16,17 @@ This is one model where you have calibrated the physics of interest. This is mos
 
 Look at the inlists for a model- what choices do you want to make for atmosphere boundary condition, rotation, nuclear reaction rates, timestepping, etc? I tend to change things by hand in the file for this first run, but something like createnmls2.pro can make these changes programmatically if you prefer that.
 
+Recommended: update_nml.py contains the function update_namelists() that allows you to easily change variables in namelists. 
 
 Run the solar model, as well as models with slightly different mixing length and helium abundance. Interpolate and run a few models again, and interpolate again, getting a relatively close calibration. Technically I think there is code to do this automatically, but I don’t think I’ve ever actually done it that way. 
 
 At this point I generally create a sparse grid of models (often just the corner of the grid- maximum and minimum mass, maximum and minimum metallicity, as well as the base model) in order to check that the numerics will run for a range of cases (e.g. all models will make it up to the tip of the giant branch or whatever the metric of interest is).
 
 **File List**
+
+Recommended: make_modelgrid.py
+
+make_modelgrid.py allows you to create a grid of models that vary in mass and metallicity. It is the most up-to-date and well-documented way to create a file list. If you want to vary other quantities such as rotation or mixing length, look at Jamie's older files:
 
 createnmls2.pro
 
@@ -31,6 +36,8 @@ Once you have the base model decided, you come up with a list of things you want
 
 
 **Running the Models**
+
+Recommended: batchrunner.py is a script to run a grid of namelists in python. It is intended to be used from the command line and has 2 versions within it: one for generating and running a mass-Fe/H grid, the other for running a pre-existing grid. 
 
 batchdistributer.sc
 
