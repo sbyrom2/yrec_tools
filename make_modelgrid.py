@@ -1,5 +1,5 @@
 ''' Make Grid
-This file contains the function make_MZgrid, which generates a grid of
+This file contains the function make_MFeHgrid, which generates a grid of
 input files for YREC at user-specified masses and [Fe/H]s.
 
 This file also contains various helper functions.
@@ -14,7 +14,7 @@ and switch them if you're using different input tables or models
 Example: Make a grid of masses from 0.5-1 Msun and [Fe/H] from -0.5 to 0 
 
 # masses should only have 2 decimal places of precision 
-# unless you modify make_MZgrid
+# unless you modify make_MFeHgrid
 masses = np.round(np.linspace(0.5,1,11),3) 
 FeHs = np.linspace(-.5,0,3)
 
@@ -31,7 +31,7 @@ yrec_inputpath = '../../yrec/input" # or '/home/sus/yrec/input'
 # found in the base_fpath directory
 base_fname 'GSnorot' 
 
-nml_grid_filenames = make_MZgrid(masses,FeHs,base_fname=base_fname,base_fpath=base_fpath,
+nml_grid_filenames = make_MFeHgrid(masses,FeHs,base_fname=base_fname,base_fpath=base_fpath,
 			yrec_writepath='output',yrec_inputpath='../../yrec/input')
 
 
@@ -234,7 +234,7 @@ def find_nearest(a:np.ndarray, value:float):
 	return idx
 
 # the actual function!
-def make_MZgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:str,
+def make_MFeHgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:str,
 				yrec_writepath:str, yrec_inputpath:str):
 	""" Creates a grid of YREC input files with the same base physical assumptions,
 		but run at a range of masses and compositions

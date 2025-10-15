@@ -1,11 +1,11 @@
 '''
-A script to run a grid of yrec models all at once.
+A script to run a grid of yrec models
 
 There are 2 versions within this file.
 
 Version 1 assumes that you have not already created the grid.
 To use it, change the masses and FeHs arrays
-and modify the parameters of make_MZgrid to match your file structure.
+and modify the parameters of make_MFeHgrid to match your file structure.
 Then run this file from the command line.
 
 Version 2
@@ -19,7 +19,7 @@ Change this and run from the command line.
 
 import os
 import numpy as np
-from make_modelgrid import make_MZgrid
+from make_modelgrid import make_MFeHgrid
 from glob import glob
 
 yrecpath = '/home/sus/Masters/yrec/src/yrec'
@@ -30,11 +30,11 @@ yrecpath = '/home/sus/Masters/yrec/src/yrec'
 masses = np.array([0.5,.6,1,2.5])
 FeHs = np.array([-.5,0,.5])
 
-base_fpath = '/home/sus/Masters/yrec_tools/test_mzgrid_sus'
+base_fpath = '/home/sus/Masters/yrec_tools/test_mFeHgrid_sus'
 
-nml_names = make_MZgrid(masses,FeHs,base_fname='test_sus',
+nml_names = make_MFeHgrid(masses,FeHs,base_fname='test_sus',
             base_fpath=base_fpath,
-            yrec_writepath='/home/sus/Masters/yrec_tools/test_mzgrid_sus/output',
+            yrec_writepath='/home/sus/Masters/yrec_tools/test_mFeHgrid_sus/output',
             yrec_inputpath='/home/sus/Masters/yrec/input')
 
 nml_names = np.reshape(nml_names,-1) # flatten the array
@@ -46,7 +46,7 @@ for filename in nml_names:
 
 ''' Version 2: Run pre-existing grid '''
 
-# path_to_nmlfiles = 'test_mzgrid_sus'
+# path_to_nmlfiles = 'test_mFeHgrid_sus'
 # os.chdir(path_to_nmlfiles) # note: you should have only the files you want to run in this directory
 # nml_names = glob(f'm*.nml1')
 # nml_names = np.array([name[:-5] for name in nml_names])
