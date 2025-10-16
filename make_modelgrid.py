@@ -18,21 +18,21 @@ Example: Make a grid of masses from 0.5-1 Msun and [Fe/H] from -0.5 to 0
 masses = np.round(np.linspace(0.5,1,11),3) 
 FeHs = np.linspace(-.5,0,3)
 
-# relative or absolute path to the starting nml files 
+# relative or absolute path to the starting namelists
 base_fpath = 'norotation_grid' # or '/home/sus/yrec_tools/norotation_grid/' 
 
-# relative or absolute to which yrec will write the models
+# relative or absolute path to which yrec will write the models
 yrec_writepath = 'output' # or '/home/sus/yrec_tools/norotation_grid/output'
 
 # relative or absolute path to yrec input files
 yrec_inputpath = '../../yrec/input" # or '/home/sus/yrec/input'
 
-# the name of the starting nml files
+# the name of the starting namelists
 # found in the base_fpath directory
 base_fname 'GSnorot' 
 
 nml_grid_filenames = make_MFeHgrid(masses,FeHs,base_fname=base_fname,base_fpath=base_fpath,
-			yrec_writepath='output',yrec_inputpath='../../yrec/input')
+			yrec_writepath=yrec_writepath,yrec_inputpath=yrec_inputpath)
 
 
 print(nml_grid_filenames[1][1])
@@ -218,7 +218,7 @@ def num_to_filestr(z:float,sig_figs=3,ignore_sign=False):
 		zname = 'p'
 	z = abs(z)
 	# convert to string (sorry this is complicated)
-	tmp = str(int(tol*z))
+	tmp = str(round(int(tol*z)))
 	while len(tmp) < sig_figs:
 		tmp = '0' + tmp
 	if ignore_sign:
@@ -244,32 +244,32 @@ def make_MFeHgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath
 		masses : np.ndarray(float)
 			List of masses (2 decimal places of precision) to make the grid for (units: Msolar)
 			If you want to add more decimal places of precision, modify the sig_figs parameter
-			of num_to_filestring
+			of num_to_filestr
 		FeHs : np.ndarray(float)
 			List of [Fe/H] values you wish to make the grid for
 		base_fname : string
 			Name of the starting .nml1 and .nml2 files (base_fname.nml1 and base_fname.nml2)
-			The grid of nml files that result from this will have the form
-			'm0_00feh_(p/m)000{base_fname}.nml(1/2)'
-			For example, the nml files for a model with a mass M = 1.13 and a
+			The namelists that result from this will have the form
+			'm000feh(p/m)000{base_fname}.nml(1/2)'
+			For example, the namelists for a model with a mass M = 1.13 and a
 			metallicity [Fe/H] = -0.05 and base_fname = 'a14GSnorot' will be
 			 'm113feh_m005_a14GSnorot.nml(1/2)'
 		base_fpath : string
-			Path to the initial .nml1 and .nml2 files. The grid of nml files will be written
+			Path to the initial .nml1 and .nml2 files. The grid of namelists will be written
 			to the same location.  
 		yrec_writepath : string
 			Path to where YREC outputs will be stored (e.g. /home/myname/EVOLUTION/output/YRECgrid/nodiff )
-			If using a relative path, make sure it starts from where you'll run the nml files
+			If using a relative path, make sure it starts from where you'll run yrec with the namelists
 		yrec_inputpath : string
 			Path to where the input files for YREC are located (e.g. /home/myname/yrec/input)
-			If using a relative path, make sure it starts from where you'll run the nml files
+			If using a relative path, make sure it starts from where you'll run yrec with the namelists
 			
 		Return
 		------
 		nmls_list : list(list(string))
 		 	2d list with shape (len(masses),len(FeHs)) that contains the nml filenames
 			E.g. if masses[0] = 1 and FeHs[0] = -.25
-				nmls_list[0][0] = base_fpath + 'm0100fehm025' + base_fname
+				nmls_list[0][0] = base_fpath + 'm100fehm025_' + base_fname
 			If you have a version of numpy that supports variable-length strings, 
 			you can convert this output to an array to make indexing easier
 		 """
