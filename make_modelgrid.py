@@ -235,7 +235,7 @@ def find_nearest(a:np.ndarray, value:float):
 
 # the actual function!
 def make_MFeHgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath:str,
-				yrec_writepath:str, yrec_inputpath:str):
+				yrec_writepath:str, yrec_inputpath:str,X_solar=0.735,Z_solar=0.017,Yp=0.2454):
 	""" Creates a grid of YREC input files with the same base physical assumptions,
 		but run at a range of masses and compositions
 
@@ -263,6 +263,12 @@ def make_MFeHgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath
 		yrec_inputpath : string
 			Path to where the input files for YREC are located (e.g. /home/myname/yrec/input)
 			If using a relative path, make sure it starts from where you'll run yrec with the namelists
+		X_solar : float (default = 0.735)
+			Solar X value. The default is 0.735 from Grevesse & Sauval 1998.
+		Z_solar : float (default = 0.017)
+			Solar Z value. The default is 0.017 from Grevesse & Sauval 1998.
+		Yp : float (default = 0.2454)
+			Primordial He abundance. The default is from the Planck 2018 results.
 			
 		Return
 		------
@@ -273,11 +279,6 @@ def make_MFeHgrid(masses:np.ndarray, FeHs:np.ndarray, base_fname:str, base_fpath
 			If you have a version of numpy that supports variable-length strings, 
 			you can convert this output to an array to make indexing easier
 		 """
-
-	# numbers needed to convert [Fe/H] to Z, X. These can be changed to match your preferred sources
-	X_solar = 0.735 # GS98  # Solar calibrated model in yrec examples: 0.719620
-	Z_solar = 0.017 # GS98  # Solar calibrated model in yrec examples: 0.016492
-	Yp = 0.2454 # Planck 2018 results
 
 	# output an array of the resulting base nml names (index by mass and FeH)
 	nmls_list = []

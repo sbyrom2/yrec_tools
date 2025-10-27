@@ -1,3 +1,2 @@
-# ignore files that are for my (Susie's) use only
-*sus*
+# ignore pycache files
 __pycache__
